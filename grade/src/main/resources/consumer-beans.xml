@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+    <context:component-scan base-package="service.impl"/>
+
+    <!--配置swan框架提供的客户端(消费服务的一端)拦截器的默认实现，用于记录一次rpc的耗时-->
+    <bean id="timeCostInterceptor" class="com.roadjava.swan.net.client.interceptor.TimeCostInterceptor"/>
+    <!-- 配置rpc同步调用时的钩子，swan默认提供了DefaultHook,用户可以实现Hook接口自己定义自己的处理逻辑-->
+    <bean id="defaultHook" class="com.roadjava.swan.net.client.hook.DefaultHook"></bean>
+
+    <bean id="clientSpring" class="com.roadjava.swan.net.spring.ClientSpring">
+        <!-- 注册中心的地址必填，目前只支持zk，格式ip:port[,ip:port.....]-->
+        <property name="registryCenterPath" value="127.0.0.1:2181"/>
+        <!-- 注册中心类型，非必须，默认zookeeper，目前只支持zookeeper-->
+        <property name="registryType" value="zookeeper"/>
+        <!-- 序列化类型，非必须，默认值pb,即使用protobuff，可用值:pb,fst,fastjson,hessian,jdk,kryo,jackson,msgpack-->
+        <property name="serializerType" value="pb"/>
+        <!--配置在集群中选择服务提供者机器的算法，非必须，默认random，即随机，可用值:random,hash,robin,specil,weightRobin,weightRandom-->
+        <property name="lbType" value="random"></property>
+        <!--配置服务端的拦截器，非必须，默认不使用拦截器-->
+        <property name="consumerInterceptors">
+            <list>
+                <ref bean="timeCostInterceptor"/>
+            </list>
+        </property>
+        <property name="hook" ref="defaultHook"/>
+    </bean>
+
+</beans>
